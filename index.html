@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三角函數挑戰 | V4.5 中文版</title>
+    <title>反應爐三角函數挑戰 | REACTOR TRIG V5.0</title>
     <style>
         @import url('https://googleapis.com');
 
@@ -21,71 +21,82 @@
             background-image: radial-gradient(circle at 50% 50%, #001a24 0%, #000 100%);
         }
 
-        /* 掃描線濾鏡 */
+        /* 掃描線濾鏡層 */
         #crt-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
             background-size: 100% 3px, 2px 100%; pointer-events: none; z-index: 500;
         }
 
+        /* 巨大倒數：浮動於所有內容之上，但不影響點擊 */
+        #bg-timer {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-family: 'Orbitron', sans-serif; font-size: 60vw; font-weight: 900;
+            color: var(--neon-red); opacity: 0; pointer-events: none; z-index: 100;
+            line-height: 1; display: none;
+        }
+
+        .emergency #bg-timer { 
+            display: block;
+            animation: giantPulse 1s infinite cubic-bezier(0.1, 0.8, 0.3, 1); 
+        }
+
+        @keyframes giantPulse {
+            0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0.1; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.25; }
+            100% { transform: translate(-50%, -50%) scale(0.7); opacity: 0.1; }
+        }
+
+        /* 緊急閃紅效果 */
+        .emergency { animation: alarm-flash 0.5s infinite alternate; }
+        @keyframes alarm-flash { from { background: rgba(0,0,0,1); } to { background: rgba(45, 0, 0, 1); } }
+
+        /* 介面容器 */
         #start-screen {
             display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
             z-index: 200; position: relative;
         }
 
-        h1 { font-family: 'Orbitron', 'Noto Sans TC', sans-serif; font-size: 4.5rem; text-shadow: 0 0 30px var(--neon-blue); margin: 0; letter-spacing: 10px; }
+        h1 { font-family: 'Orbitron', 'Noto Sans TC', sans-serif; font-size: 4rem; text-shadow: 0 0 30px var(--neon-blue); margin: 0; letter-spacing: 8px; }
 
         #main-console {
             display: none; height: 100vh; padding: 25px; box-sizing: border-box;
-            grid-template-rows: auto 1fr auto; gap: 20px;
+            grid-template-rows: auto 1fr auto; gap: 20px; position: relative; z-index: 10;
         }
 
-        .emergency { animation: alarm-flash 0.4s infinite alternate; }
-        @keyframes alarm-flash { from { background: rgba(0,0,0,1); } to { background: rgba(40, 0, 0, 1); } }
-
-        #bg-timer {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-family: 'Orbitron', sans-serif; font-size: 65vw; opacity: 0;
-            color: var(--neon-red); pointer-events: none; z-index: 0;
-        }
-        .emergency #bg-timer { opacity: 0.12; }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; z-index: 10; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
 
         .module {
             background: var(--panel-bg); border: 2px solid var(--neon-blue);
-            border-radius: 4px; padding: 25px; position: relative;
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+            border-radius: 8px; padding: 20px; position: relative;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.15);
         }
 
-        .module::after {
-            content: "安全鏈路已啟動"; position: absolute; bottom: 5px; right: 10px;
-            font-size: 10px; opacity: 0.5;
-        }
+        canvas { width: 100%; height: 280px; filter: drop-shadow(0 0 5px currentColor); }
 
-        canvas { width: 100%; height: 300px; filter: drop-shadow(0 0 5px currentColor); }
-
+        /* 輸入區域 */
         .input-block {
             display: flex; align-items: center; justify-content: center;
-            margin-top: 25px; font-size: 2rem; color: #fff;
+            margin-top: 20px; font-size: 2rem; color: #fff;
         }
 
         .fraction-ui { display: flex; flex-direction: column; align-items: center; margin: 0 20px; }
         input {
-            background: rgba(0,0,0,0.5); border: 1px solid var(--neon-blue); color: var(--neon-green);
+            background: rgba(0,0,0,0.6); border: 1px solid var(--neon-blue); color: var(--neon-green);
             font-family: 'Orbitron', sans-serif; font-size: 1.6rem; text-align: center;
             outline: none; padding: 5px;
         }
         input:focus { border-color: var(--neon-green); box-shadow: 0 0 15px var(--neon-green); }
 
         .btn {
-            font-family: 'Noto Sans TC', sans-serif; padding: 18px 50px; font-size: 1.3rem;
+            font-family: 'Noto Sans TC', sans-serif; padding: 18px 45px; font-size: 1.2rem;
             cursor: pointer; background: transparent; border: 2px solid var(--neon-blue);
             color: var(--neon-blue); transition: 0.2s; font-weight: 900;
         }
         .btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 30px var(--neon-blue); }
         .btn-execute { border-color: var(--neon-green); color: var(--neon-green); }
-        .btn-execute:hover { background: var(--neon-green); box-shadow: 0 0 30px var(--neon-green); }
+        .btn-execute:hover { background: var(--neon-green); }
 
         #nuke { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 1000; }
     </style>
@@ -97,53 +108,53 @@
     <div id="nuke"></div>
 
     <div id="start-screen">
-        <div style="font-size: 12px; letter-spacing: 3px; margin-bottom: 10px; color: var(--neon-green);">僅限授權工程師訪問</div>
-        <h1>反應爐挑戰</h1>
-        <p style="letter-spacing: 5px;">核心修復序列 V4.5 中文化</p>
-        <button class="btn" onclick="bootSystem()">進入指令中心</button>
+        <div style="font-size: 12px; letter-spacing: 3px; margin-bottom: 10px; color: var(--neon-green);">AUTHORIZED_ENGINEER_ONLY</div>
+        <h1>核心挑戰</h1>
+        <p style="letter-spacing: 5px;">反應爐修復序列 V5.0</p>
+        <button class="btn" onclick="bootSystem()">啟動修復程序</button>
     </div>
 
     <div id="main-console">
         <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--neon-blue); padding-bottom: 10px;">
-            <div id="status-text">核心穩定度: <span style="color:var(--neon-green)">100.0%</span></div>
+            <div id="status-text">核心狀態: <span style="color:var(--neon-green)">穩定運作</span></div>
             <div id="hud-timer" style="font-family: 'Orbitron'; font-size: 2.5rem; color: var(--neon-red);">30.00</div>
         </div>
 
         <div class="grid">
             <!-- 模組 A -->
             <div class="module" id="mod-a">
-                <div style="font-size: 12px; margin-bottom: 10px;">> 分析模式: 三角比同步</div>
+                <div style="font-size: 12px; margin-bottom: 5px; opacity: 0.7;">> 分析模式: 三角比比值校準</div>
                 <canvas id="can-a"></canvas>
                 <div class="input-block">
                     <span id="labelA" style="color:var(--neon-blue); font-weight: 900;">SIN(X)</span> =
                     <div class="fraction-ui">
-                        <input type="number" id="inA_n" style="width: 90px;">
+                        <input type="number" id="inA_n" style="width: 85px;">
                         <div style="width:100%; height:3px; background:var(--neon-blue); margin:8px 0;"></div>
-                        <input type="number" id="inA_d" style="width: 90px;">
+                        <input type="number" id="inA_d" style="width: 85px;">
                     </div>
                 </div>
             </div>
 
             <!-- 模組 B -->
             <div class="module" id="mod-b" style="border-color: var(--neon-orange);">
-                <div style="font-size: 12px; margin-bottom: 10px; color: var(--neon-orange);">> 分析模式: 距離校準</div>
+                <div style="font-size: 12px; margin-bottom: 5px; color: var(--neon-orange); opacity: 0.7;">> 分析模式: 邊長向量合成</div>
                 <canvas id="can-b"></canvas>
                 <div class="input-block">
-                    目標 Y 值 = <input type="number" id="inB" step="0.001" style="width: 180px; border-color: var(--neon-orange); margin-left: 15px;">
+                    目標 Y = <input type="number" id="inB" step="0.001" style="width: 160px; border-color: var(--neon-orange); margin-left: 15px;">
                 </div>
             </div>
         </div>
 
         <div style="display: flex; justify-content: center; gap: 30px;">
             <button class="btn btn-execute" onclick="executeSync()">執行數據同步</button>
-            <button class="btn" style="font-size: 0.9rem; border-color: #666; color: #666;" onclick="resetModules()">重啟座標系統</button>
+            <button class="btn" style="font-size: 0.9rem; border-color: #444; color: #444;" onclick="resetModules()">刷新核心座標</button>
         </div>
     </div>
 
     <script>
         let time = 3000, timer = null, data = {};
         const triples = [
-            [3,4,5], [5,12,13], [8,15,17], [7,24,25], [20,21,29]
+           [3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25], [9, 40, 41], [12, 35, 37], [20, 21, 29]
         ];
 
         function bootSystem() {
@@ -161,35 +172,41 @@
             const rw = adj * scale, rh = opp * scale;
             const ox = (w_px - rw)/2, oy = (h_px - rh)/2 + rh;
 
+            // 背景圓環
             ctx.strokeStyle = color + "22";
-            ctx.beginPath(); ctx.arc(w_px/2, h_px/2, 120, 0, Math.PI*2); ctx.stroke();
+            ctx.beginPath(); ctx.arc(w_px/2, h_px/2, 110, 0, Math.PI*2); ctx.stroke();
 
+            // 繪製三角形
             ctx.beginPath(); ctx.lineWidth = 4; ctx.strokeStyle = color;
             ctx.moveTo(ox, oy - rh); ctx.lineTo(ox, oy); ctx.lineTo(ox + rw, oy); ctx.closePath(); ctx.stroke();
             
-            // 直角標記
-            const sqSize = 20;
+            // --- 嚴謹：直角標記繪製 ---
+            const sq = 18;
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(ox, oy - sqSize);
-            ctx.lineTo(ox + sqSize, oy - sqSize);
-            ctx.lineTo(ox + sqSize, oy);
+            ctx.moveTo(ox, oy - sq);
+            ctx.lineTo(ox + sq, oy - sq);
+            ctx.lineTo(ox + sq, oy);
             ctx.stroke();
 
+            // 節點標記
             ctx.fillStyle = color;
             [ [ox, oy-rh], [ox, oy], [ox+rw, oy] ].forEach(p => {
                 ctx.fillRect(p[0]-5, p[1]-5, 10, 10);
             });
 
+            // 角度弧線
             const rad = Math.atan(rh/rw);
-            ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
-            ctx.arc(ox+rw, oy, 40, Math.PI, Math.PI + rad); ctx.stroke();
+            ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+            ctx.arc(ox+rw, oy, 35, Math.PI, Math.PI + rad); ctx.stroke();
             
+            // 角度標籤位置 (角平分線算法)
             const bisector = rad / 2;
-            const tx = ox+rw - Math.cos(bisector)*65, ty = oy - Math.sin(bisector)*65;
+            const tx = ox+rw - Math.cos(bisector)*80, ty = oy - Math.sin(bisector)*60;
             ctx.font = "bold 22px Orbitron"; ctx.fillStyle = color; ctx.textAlign = "center";
             ctx.fillText(showX ? "X" : angle+"°", tx, ty);
 
+            // 邊長數值
             ctx.font = "16px Share Tech Mono"; ctx.fillStyle = "#fff";
             if(labels.l) { ctx.textAlign = "right"; ctx.fillText(labels.l, ox-25, oy-rh/2+5); }
             if(labels.b) { ctx.textAlign = "center"; ctx.fillText(labels.b, ox+rw/2, oy+35); }
@@ -199,7 +216,9 @@
         function resetModules() {
             clearInterval(timer); time = 3000;
             document.getElementById('body').classList.remove('emergency');
+            document.getElementById('bg-timer').style.display = 'none';
             
+            // 題目 A
             const b = triples[Math.floor(Math.random()*triples.length)];
             const m = Math.floor(Math.random()*2)+1;
             const [o, a, h] = b.map(v => v*m);
@@ -208,6 +227,7 @@
             document.getElementById('labelA').innerText = type;
             drawScanner('can-a', o, a, h, null, {l:o, b:a, h:h}, true, "#00f3ff");
 
+            // 題目 B
             const deg = Math.floor(Math.random()*65)+15;
             const k = Math.floor(Math.random()*12)+5, r = deg*Math.PI/180;
             const findH = Math.random() > 0.5;
@@ -227,22 +247,34 @@
             time--;
             const display = (time/100).toFixed(2);
             document.getElementById('hud-timer').innerText = display;
-            document.getElementById('bg-timer').innerText = Math.ceil(time/100);
+            
+            const sec = Math.ceil(time/100);
+            const giantBox = document.getElementById('bg-timer');
+            giantBox.innerText = sec;
 
-            if(time <= 1000) {
+            if(time <= 1000) { // 進入 10 秒倒數
                 document.getElementById('body').classList.add('emergency');
-                document.getElementById('status-text').innerHTML = '反應爐狀態: <span style="color:var(--neon-red)">核心崩潰邊緣</span>';
+                document.getElementById('status-text').innerHTML = '核心狀態: <span style="color:var(--neon-red); font-weight:900;">即將發生熔毀</span>';
+                if(time > 0) giantBox.style.display = 'block';
+            } else {
+                document.getElementById('body').classList.remove('emergency');
+                giantBox.style.display = 'none';
             }
-            if(time <= 0) { clearInterval(timer); meltdown(); }
+
+            if(time <= 0) { 
+                clearInterval(timer); 
+                giantBox.style.display = 'none';
+                meltdown(); 
+            }
         }
 
         function meltdown() {
             document.getElementById('nuke').style.display = 'block';
             setTimeout(() => {
                 document.getElementById('nuke').style.display = 'none';
-                alert('☢️ 同步失敗：核心已熔毀 ☢️');
+                alert('☢️ 同步超時：核心已熔毀 ☢️');
                 resetModules();
-            }, 1000);
+            }, 1200);
         }
 
         function executeSync() {
@@ -250,6 +282,7 @@
             const an = parseFloat(document.getElementById('inA_n').value);
             const ad = parseFloat(document.getElementById('inA_d').value);
             const { o, a, h, type } = data.a;
+            
             const checkA = (type.includes('SIN') ? Math.abs(an/ad - o/h) < 0.001 : type.includes('COS') ? Math.abs(an/ad - a/h) < 0.001 : Math.abs(an/ad - o/a) < 0.001);
             
             const ansB = parseFloat(document.getElementById('inB').value);
@@ -257,12 +290,12 @@
             const checkB = ansB ? (parseFloat(ansB.toPrecision(3)) === targetB) : false;
 
             if(checkA && checkB) {
-                alert('✅ 同步成功：核心穩定度已回升');
+                alert('✅ 同步成功：核心穩定度已恢復');
                 resetModules();
             } else {
-                let msg = '❌ 同步錯誤：輸入數據不匹配\n';
-                msg += '預期 A 比例: ' + (type.includes('SIN')?o+'/'+h : type.includes('COS')?a+'/'+h : o+'/'+a) + '\n';
-                msg += '預期 B 數值: ' + targetB;
+                let msg = '❌ 同步錯誤：偵測到非法數值\n';
+                msg += '正確 A 比例: ' + (type.includes('SIN')?o+'/'+h : type.includes('COS')?a+'/'+h : o+'/'+a) + '\n';
+                msg += '正確 B 數值: ' + targetB;
                 alert(msg);
                 resetModules();
             }
